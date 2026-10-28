@@ -74,7 +74,8 @@
       "tessera_native_10m_128d",
       "tessera_nearest_2p5m_128d"
     ],
-    "github_pages_static": "local browser: joint full 344856 pixels, EPSG:32651 location, Top 500 and repeat search; all 500 indices match Python reference, max absolute score error 8.6e-8; public vector chunks SHA-256 verified"
+    "github_pages_static": "local browser: joint full 344856 pixels, EPSG:32651 location, Top 500 and repeat search; all 500 indices match Python reference, max absolute score error 8.6e-8; public vector chunks SHA-256 verified",
+    "visualization_layout": "passed: desktop controls, linked filters, satellite, opacity, selection and Top 500 candidate focus; 390px mobile views stack with no horizontal overflow and information panel opens/closes"
   },
   "datasets": [
     {
@@ -180,9 +181,9 @@
     "frontend/src/main.tsx": "9da49df57ba1eb712d61c77078c3e4ebcbb7bb53e00745e17c090288bfff300a",
     "frontend/src/raster/RasterCloud.tsx": "dc802e7c06aee19551227bd715aa791cb9e9d17d93ee069de74bde5b0f158251",
     "frontend/src/raster/RasterMap.tsx": "bf9ff3748c9c3196ad1c779bdfdeabebb3fd1231929f10abd14b8b6996fb9fd0",
-    "frontend/src/raster/RasterWorkspace.tsx": "d549dcb419cd288288af18f99d43f775130e10247ccded2fc02bf0dc9a19c333",
+    "frontend/src/raster/RasterWorkspace.tsx": "1c1372395d74d9b737f919da10c416c00d1611f79da0442a700d246bd0ba963e",
     "frontend/src/raster/previewMask.ts": "13e7d58243507b83003e98ee1af5a5fcae008f373bf37c99e2bde1f151517f90",
-    "frontend/src/raster/raster.css": "f30b5defdcb040dd1eb3b9bc2aecd6c7ff517a5faf245f27d798ca8967143cc2",
+    "frontend/src/raster/raster.css": "36439939b50e18dc5c5ac774b80a787fa10a067081cfdf696817d404dd66c52a",
     "frontend/src/raster/satelliteStatus.ts": "0f10f37a250835129ee9455186657ab9d8629f6faed52dea8a8c32d4d4e40ef5",
     "frontend/src/raster/similarity.worker.ts": "25b5eef92298da40f6424895a569d84cdeba8c635fa8cffc0984ae57fea128be",
     "frontend/src/raster/staticRaster.ts": "131b7d4dbbc2d9fab64aacd40539ca4eca3d87def5e7c4bb4214d3df53a299b3",
@@ -202,11 +203,11 @@
     "start_raster.py": "1df0e8bc528b20b03df9979b640da1dd51a6b604457e831c70a5fb78edc7ece4"
   },
   "frontend_build_sha256": {
-    "frontend/dist/.build-signature": "9657afbcd0f4f220dada91d221eca285a9a95109e8349d545afa5c9999b655dd",
-    "frontend/dist/assets/index-CWrF8kup.js": "f84356b9b9dff1c607ee33c030281acea755acd1c47ca1dfcc512553a4a2813a",
-    "frontend/dist/assets/index-DbyoWuzL.css": "0ca190472db3e4fc4982fc60a7d2d0f63f8755a5ec0de596eb01c6d5237bf0f9",
+    "frontend/dist/.build-signature": "76650867fe2d727e13c7cdb4e536602e90ad82bd5dbef2ca3ae4715d5527a831",
+    "frontend/dist/assets/index-Du6e6VuY.css": "95bcabad0d516574845fd155d8dc1c73394384da19058609836c2e4bf566e4d9",
+    "frontend/dist/assets/index-YrMK0ETJ.js": "ce5d912aef70a6e4cc5084cf67c823cd83307cc6a4db012b08183e1e0a24514f",
     "frontend/dist/assets/similarity.worker-BDnacbvS.js": "321d279ea324464b53019e888849a1088a2f426e2f557ec12b8185e46355664d",
-    "frontend/dist/index.html": "00f1c9230198cb08674a26a4ef1fe06e371ea25d2b55368381cd91d595c21857"
+    "frontend/dist/index.html": "7cd96a04c4f4778944cdfdf726686c0752f4e48db17e916d670cc5434383a3a2"
   },
   "changes": [
     "双视图类别筛选：聚类/PCA配色同步透明掩膜、选中与相似高亮过滤",
@@ -217,6 +218,7 @@
     "相似候选独立橙色定位与双视图平移，保留原查询点和结果，重复点击可再次定位",
     "候选结果单行横向滚动展示前50个可见结果，显示原始排名和分数",
     "新增Top200、500选项与API上限500，保持原始向量全量精确余弦检索",
-    "GitHub Pages 静态公开版：joint 全量像元、浏览器精确余弦检索、分块和缓存"
+    "GitHub Pages 静态公开版：joint 全量像元、浏览器精确余弦检索、分块和缓存",
+    "双视图展示优先：顶部紧凑工具栏、可展开信息、固定展示高度与紧凑详情"
   ]
 }
