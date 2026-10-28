@@ -3,7 +3,7 @@ import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import type { RasterArrays, RasterMeta } from "./types";
 
-interface Props { meta: RasterMeta; arrays: RasterArrays; mode: "cluster" | "pca"; selected: number | null; focused: number | null; focusSerial: number; similar: number[]; visible: boolean[]; pointSize: number; onSelect: (index: number) => void }
+interface Props { meta: RasterMeta; arrays: RasterArrays; mode: "cluster" | "pca"; selected: number | null; focused: number | null; focusSerial: number; similar: number[]; visible: boolean[]; mask: Uint8Array; pointSize: number; onSelect: (index: number) => void }
 interface Runtime { update: (props: Props) => void; reset: () => void }
 const vertex = `attribute vec3 pointColor; attribute float shown; attribute float pointIndex;
 varying vec3 vColor; varying float vShown;
@@ -99,7 +99,7 @@ export function RasterCloud(props: Props) {
       const palette = next.meta.palette.map(c => [1, 3, 5].map(i => parseInt(c.slice(i, i + 2), 16) / 255));
       const highlight = new Set(next.similar);
       for (let i = 0; i < shown.length; i++) {
-        shown[i] = next.visible[next.arrays.labels[i]] ? 1 : 0;
+        shown[i] = next.mask[i] ? 1 : 0;
         const c = palette[next.arrays.labels[i]];
         for (let channel = 0; channel < 3; channel++) {
           const base = next.mode === "pca" ? next.arrays.colors[i * 3 + channel] / 255 : c[channel];
@@ -109,7 +109,7 @@ export function RasterCloud(props: Props) {
       geometry.getAttribute("pointColor").needsUpdate = true; geometry.getAttribute("shown").needsUpdate = true;
       material.uniforms.pointSize.value = next.pointSize; material.uniforms.selectedIndex.value = next.selected ?? -1;
       pickMaterial.uniforms.pointSize.value = next.pointSize; pickMaterial.uniforms.selectedIndex.value = next.selected ?? -1;
-      const indices = [...next.similar, ...(next.selected === null ? [] : [next.selected])].filter(i => next.visible[next.arrays.labels[i]]);
+      const indices = [...next.similar, ...(next.selected === null ? [] : [next.selected])].filter(i => next.mask[i]);
       const hp = new Float32Array(indices.length * 3), hc = new Float32Array(indices.length * 3);
       indices.forEach((index, i) => { hp.set(next.arrays.positions.subarray(index * 3, index * 3 + 3), i * 3); hc.set(index === next.selected ? [1, 1, 1] : [1, .85, .25], i * 3); });
       highlightGeometry.dispose();
@@ -118,7 +118,7 @@ export function RasterCloud(props: Props) {
       highlightGeometry.setAttribute("shown", new THREE.BufferAttribute(new Float32Array(indices.length).fill(1), 1));
       highlightGeometry.setAttribute("pointIndex", new THREE.BufferAttribute(new Float32Array(indices), 1));
       highlightMaterial.uniforms.selectedIndex.value = next.selected ?? -1;
-      const focused = next.focused !== null && next.visible[next.arrays.labels[next.focused]] ? next.focused : null;
+      const focused = next.focused !== null && next.mask[next.focused] ? next.focused : null;
       focusMarker.visible = focused !== null;
       if (focused !== null) {
         const position = new THREE.Vector3().fromArray(next.arrays.positions, focused * 3);
@@ -172,7 +172,7 @@ export function RasterCloud(props: Props) {
       renderer.dispose(); renderer.domElement.remove(); runtime.current = null;
     };
   }, [props.arrays, props.meta]);
-  useEffect(() => { runtime.current?.update(props); }, [props.mode, props.selected, props.focused, props.focusSerial, props.similar, props.visible, props.pointSize]);
+  useEffect(() => { runtime.current?.update(props); }, [props.mode, props.selected, props.focused, props.focusSerial, props.similar, props.visible, props.mask, props.pointSize]);
   return <div className="raster-cloud" ref={host}>
     <button className="raster-float-button" onClick={() => runtime.current?.reset()}>重置视角</button>
     <div className="raster-canvas-note">拖动旋转 · 滚轮缩放 · 点击选择像元</div>

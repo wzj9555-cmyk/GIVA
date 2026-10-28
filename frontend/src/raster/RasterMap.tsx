@@ -3,17 +3,18 @@ import maplibregl from "maplibre-gl";
 import type { Pixel, RasterMeta } from "./types";
 import { rasterUrl } from "./types";
 import { applyClusterVisibility, decodeClusterLabels } from "./previewMask";
+import { wgsToGcj, gcjToWgs } from "./gcj";
 import { initialSatelliteStatus, updateSatelliteStatus } from "./satelliteStatus";
 
-interface Props { datasetId: string; meta: RasterMeta; mode: "cluster" | "pca"; selected: Pixel | null; focused: Pixel | null; similar: Pixel[]; visible: boolean[]; basemap: boolean; rasterOpacity: number; onLocate: (lng: number, lat: number) => void }
+interface Props { datasetId: string; meta: RasterMeta; mode: "cluster" | "pca"; selected: Pixel | null; focused: Pixel | null; similar: Pixel[]; visible: boolean[]; mask: Uint8Array; basemap: boolean; rasterOpacity: number; onLocate: (lng: number, lat: number) => void }
 interface Preview { width: number; height: number; rgba: Uint8ClampedArray }
 interface MaskPreviews { cluster: Preview; pca: Preview; labels: Int16Array }
-const imageCoords = (meta: RasterMeta) => meta.image_coordinates as [[number, number], [number, number], [number, number], [number, number]];
+const imageCoords = (meta: RasterMeta) => meta.image_coordinates.map(([lng, lat]) => wgsToGcj(lng, lat)) as [[number, number], [number, number], [number, number], [number, number]];
 const allVisible = (p: Props) => p.meta.palette.every((_, label) => p.visible[label]);
-const markerData = (p: Props) => ({ type: "FeatureCollection" as const, features: [...p.similar.filter(item => p.visible[item.cluster]).map(item => ({ type: "Feature" as const, geometry: { type: "Point" as const, coordinates: [item.lng, item.lat] }, properties: { selected: false } })), ...(p.selected && p.visible[p.selected.cluster] ? [{ type: "Feature" as const, geometry: { type: "Point" as const, coordinates: [p.selected.lng, p.selected.lat] }, properties: { selected: true } }] : [])] });
-const focusData = (p: Props) => ({ type: "FeatureCollection" as const, features: p.focused && p.visible[p.focused.cluster] ? [{ type: "Feature" as const, geometry: { type: "Point" as const, coordinates: [p.focused.lng, p.focused.lat] }, properties: {} }] : [] });
-const focusOnMap = (map: maplibregl.Map, p: Props) => { if (p.focused && p.visible[p.focused.cluster]) map.panTo([p.focused.lng, p.focused.lat], { duration: 450 }); };
-const satelliteTiles = ["https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}"];
+const markerData = (p: Props) => ({ type: "FeatureCollection" as const, features: [...p.similar.filter(item => p.mask[item.index]).map(item => ({ type: "Feature" as const, geometry: { type: "Point" as const, coordinates: wgsToGcj(item.lng, item.lat) }, properties: { selected: false } })), ...(p.selected && p.mask[p.selected.index] ? [{ type: "Feature" as const, geometry: { type: "Point" as const, coordinates: wgsToGcj(p.selected.lng, p.selected.lat) }, properties: { selected: true } }] : [])] });
+const focusData = (p: Props) => ({ type: "FeatureCollection" as const, features: p.focused && p.mask[p.focused.index] ? [{ type: "Feature" as const, geometry: { type: "Point" as const, coordinates: wgsToGcj(p.focused.lng, p.focused.lat) }, properties: {} }] : [] });
+const focusOnMap = (map: maplibregl.Map, p: Props) => { if (p.focused && p.mask[p.focused.index]) map.panTo(wgsToGcj(p.focused.lng, p.focused.lat), { duration: 450 }); };
+const satelliteTiles = ["https://webst01.is.autonavi.com/appmaptile?style=6&x={x}&y={y}&z={z}"];
 
 async function loadPreview(url: string, signal: AbortSignal): Promise<Preview> {
   const response = await fetch(url, { signal, cache: "no-store" });
@@ -37,10 +38,10 @@ export function RasterMap(props: Props) {
   const propsRef = useRef(props); propsRef.current = props;
   const [previewError, setPreviewError] = useState<string | null>(null);
   const [satelliteStatus, setSatelliteStatus] = useState(initialSatelliteStatus(false));
-  const reset = () => { const b = propsRef.current.meta.bounds; mapRef.current?.fitBounds([[b[0], b[1]], [b[2], b[3]]], { padding: 40, duration: 500 }); };
+  const reset = () => { const b = propsRef.current.meta.bounds; mapRef.current?.fitBounds([wgsToGcj(b[0], b[1]), wgsToGcj(b[2], b[3])], { padding: 40, duration: 500 }); };
   useEffect(() => {
     if (!host.current) return;
-    const map = new maplibregl.Map({ container: host.current, style: { version: 8, sources: {}, layers: [{ id: "background", type: "background", paint: { "background-color": "#122332" } }] }, center: [(props.meta.bounds[0] + props.meta.bounds[2]) / 2, (props.meta.bounds[1] + props.meta.bounds[3]) / 2], zoom: 14, maxZoom: 23, attributionControl: false, preserveDrawingBuffer: true });
+    const map = new maplibregl.Map({ container: host.current, style: { version: 8, sources: {}, layers: [{ id: "background", type: "background", paint: { "background-color": "#122332" } }] }, center: wgsToGcj((props.meta.bounds[0] + props.meta.bounds[2]) / 2, (props.meta.bounds[1] + props.meta.bounds[3]) / 2), zoom: 14, maxZoom: 23, attributionControl: false, preserveDrawingBuffer: true });
     mapRef.current = map;
     let disposed = false;
     let revision = 0;
@@ -55,7 +56,9 @@ export function RasterMap(props: Props) {
       setSatelliteStatus(satelliteState);
     };
     const addSatellite = () => {
-      map.addSource("satellite", { type: "raster", tiles: satelliteTiles, tileSize: 256, maxzoom: 19, attribution: '© <a href="https://www.google.com/maps" target="_blank" rel="noopener noreferrer">Google</a> · 卫星影像' });
+      // Amap returns a placeholder tile at z19 in the study area. MapLibre
+      // overscales the last available imagery when the user zooms beyond z18.
+      map.addSource("satellite", { type: "raster", tiles: satelliteTiles, tileSize: 256, maxzoom: 18, attribution: '© <a href="https://www.amap.com/" target="_blank" rel="noopener noreferrer">高德地图</a> · 卫星影像' });
       map.addLayer({ id: "satellite", type: "raster", source: "satellite", layout: { visibility: propsRef.current.basemap ? "visible" : "none" }, paint: { "raster-opacity": 1 } }, map.getLayer("full-raster") ? "full-raster" : undefined);
     };
     const syncBasemap = () => {
@@ -84,7 +87,9 @@ export function RasterMap(props: Props) {
     };
     const imageInView = () => {
       const view = map.getBounds();
-      const [west, south, east, north] = props.meta.bounds;
+      const bounds = props.meta.bounds;
+      const [west, south] = wgsToGcj(bounds[0], bounds[1]);
+      const [east, north] = wgsToGcj(bounds[2], bounds[3]);
       const wrap = Math.round(((view.getWest() + view.getEast()) / 2 - (west + east) / 2) / 360) * 360;
       return east + wrap >= view.getWest() && west + wrap <= view.getEast() && north >= view.getSouth() && south <= view.getNorth();
     };
@@ -150,7 +155,7 @@ export function RasterMap(props: Props) {
       map.addLayer({ id: "focus-ring", type: "circle", source: "focused", paint: { "circle-radius": 12, "circle-color": "rgba(0,0,0,0)", "circle-stroke-width": 3, "circle-stroke-color": "#ff9354" } });
       map.addLayer({ id: "focus-center", type: "circle", source: "focused", paint: { "circle-radius": 4, "circle-color": "#ff9354", "circle-stroke-width": 1, "circle-stroke-color": "#ffffff" } });
       const b = latest.meta.bounds;
-      map.fitBounds([[b[0], b[1]], [b[2], b[3]]], { padding: 40, duration: 0 });
+      map.fitBounds([wgsToGcj(b[0], b[1]), wgsToGcj(b[2], b[3])], { padding: 40, duration: 0 });
       focusOnMap(map, latest);
       syncBasemap();
       void syncPreview();
@@ -173,19 +178,19 @@ export function RasterMap(props: Props) {
     });
     map.on("move", refreshCanvas);
     map.on("resize", refreshCanvas);
-    map.on("click", event => propsRef.current.onLocate(event.lngLat.lng, event.lngLat.lat));
+    map.on("click", event => propsRef.current.onLocate(...gcjToWgs(event.lngLat.lng, event.lngLat.lat)));
     const observer = new ResizeObserver(() => map.resize()); observer.observe(host.current);
     return () => { disposed = true; revision++; controller.abort(); syncPreviewRef.current = null; syncBasemapRef.current = null; observer.disconnect(); map.remove(); if (mapRef.current === map) mapRef.current = null; };
   }, [props.meta, props.datasetId]);
-  useEffect(() => { syncPreviewRef.current?.(); }, [props.mode, props.visible, props.datasetId]);
+  useEffect(() => { syncPreviewRef.current?.(); }, [props.mode, props.visible, props.mask, props.datasetId]);
   useEffect(() => {
     const map = mapRef.current; if (!map) return;
     (map.getSource("selected") as maplibregl.GeoJSONSource | undefined)?.setData(markerData(props));
     (map.getSource("focused") as maplibregl.GeoJSONSource | undefined)?.setData(focusData(props));
-  }, [props.selected, props.focused, props.similar, props.visible]);
+  }, [props.selected, props.focused, props.similar, props.visible, props.mask]);
   useEffect(() => {
     const map = mapRef.current; if (!map) return;
-    if (props.selected && props.visible[props.selected.cluster]) { const { lng, lat } = props.selected; if (!map.getBounds().contains([lng, lat])) map.panTo([lng, lat]); }
+    if (props.selected && props.mask[props.selected.index]) { const { lng, lat } = props.selected; const point = wgsToGcj(lng, lat); if (!map.getBounds().contains(point)) map.panTo(point); }
   }, [props.selected]);
   useEffect(() => {
     const map = mapRef.current; if (map?.getSource("focused")) focusOnMap(map, props);
