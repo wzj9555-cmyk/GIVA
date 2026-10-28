@@ -1,10 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import maplibregl from "maplibre-gl";
 import type { Pixel, RasterMeta } from "./types";
-import { rasterUrl } from "./types";
+import { RASTER_API, STATIC_DEMO, rasterUrl } from "./types";
 import { applyClusterVisibility, decodeClusterLabels } from "./previewMask";
 import { wgsToGcj, gcjToWgs } from "./gcj";
-import { initialSatelliteStatus, updateSatelliteStatus } from "./satelliteStatus";
 
 interface Props { datasetId: string; meta: RasterMeta; mode: "cluster" | "pca"; selected: Pixel | null; focused: Pixel | null; similar: Pixel[]; visible: boolean[]; mask: Uint8Array; basemap: boolean; rasterOpacity: number; onLocate: (lng: number, lat: number) => void }
 interface Preview { width: number; height: number; rgba: Uint8ClampedArray }
@@ -14,7 +13,6 @@ const allVisible = (p: Props) => p.meta.palette.every((_, label) => p.visible[la
 const markerData = (p: Props) => ({ type: "FeatureCollection" as const, features: [...p.similar.filter(item => p.mask[item.index]).map(item => ({ type: "Feature" as const, geometry: { type: "Point" as const, coordinates: wgsToGcj(item.lng, item.lat) }, properties: { selected: false } })), ...(p.selected && p.mask[p.selected.index] ? [{ type: "Feature" as const, geometry: { type: "Point" as const, coordinates: wgsToGcj(p.selected.lng, p.selected.lat) }, properties: { selected: true } }] : [])] });
 const focusData = (p: Props) => ({ type: "FeatureCollection" as const, features: p.focused && p.mask[p.focused.index] ? [{ type: "Feature" as const, geometry: { type: "Point" as const, coordinates: wgsToGcj(p.focused.lng, p.focused.lat) }, properties: {} }] : [] });
 const focusOnMap = (map: maplibregl.Map, p: Props) => { if (p.focused && p.mask[p.focused.index]) map.panTo(wgsToGcj(p.focused.lng, p.focused.lat), { duration: 450 }); };
-const satelliteTiles = ["https://webst01.is.autonavi.com/appmaptile?style=6&x={x}&y={y}&z={z}"];
 
 async function loadPreview(url: string, signal: AbortSignal): Promise<Preview> {
   const response = await fetch(url, { signal, cache: "no-store" });
@@ -35,9 +33,10 @@ export function RasterMap(props: Props) {
   const mapRef = useRef<maplibregl.Map | null>(null);
   const syncPreviewRef = useRef<(() => void) | null>(null);
   const syncBasemapRef = useRef<(() => void) | null>(null);
+  const aerialBoundsRef = useRef<[number, number, number, number] | null>(null);
   const propsRef = useRef(props); propsRef.current = props;
   const [previewError, setPreviewError] = useState<string | null>(null);
-  const [satelliteStatus, setSatelliteStatus] = useState(initialSatelliteStatus(false));
+  const [aerialError, setAerialError] = useState<string | null>(null);
   const reset = () => { const b = propsRef.current.meta.bounds; mapRef.current?.fitBounds([wgsToGcj(b[0], b[1]), wgsToGcj(b[2], b[3])], { padding: 40, duration: 500 }); };
   useEffect(() => {
     if (!host.current) return;
@@ -48,28 +47,8 @@ export function RasterMap(props: Props) {
     let previews: Promise<MaskPreviews> | null = null;
     let preparedPreviews: MaskPreviews | null = null;
     let canvasDirty = false;
-    let satelliteState = initialSatelliteStatus(propsRef.current.basemap);
-    setSatelliteStatus(satelliteState);
-    const updateSatellite = (event: Parameters<typeof updateSatelliteStatus>[1]) => {
-      if (disposed) return;
-      satelliteState = updateSatelliteStatus(satelliteState, event);
-      setSatelliteStatus(satelliteState);
-    };
-    const addSatellite = () => {
-      // Amap returns a placeholder tile at z19 in the study area. MapLibre
-      // overscales the last available imagery when the user zooms beyond z18.
-      map.addSource("satellite", { type: "raster", tiles: satelliteTiles, tileSize: 256, maxzoom: 18, attribution: '© <a href="https://www.amap.com/" target="_blank" rel="noopener noreferrer">高德地图</a> · 卫星影像' });
-      map.addLayer({ id: "satellite", type: "raster", source: "satellite", layout: { visibility: propsRef.current.basemap ? "visible" : "none" }, paint: { "raster-opacity": 1 } }, map.getLayer("full-raster") ? "full-raster" : undefined);
-    };
     const syncBasemap = () => {
-      if (disposed || !map.getLayer("satellite")) return;
-      const enabled = propsRef.current.basemap;
-      const retry = enabled && satelliteState.failed;
-      updateSatellite({ type: "visibility", enabled });
-      // setTiles() reloads healthy tiles but retains errored ones in MapLibre.
-      // Recreate this source to give a failed request a fresh attempt.
-      if (retry) { map.removeLayer("satellite"); map.removeSource("satellite"); addSatellite(); }
-      map.setLayoutProperty("satellite", "visibility", enabled ? "visible" : "none");
+      if (!disposed && map.getLayer("aerial")) map.setLayoutProperty("aerial", "visibility", propsRef.current.basemap ? "visible" : "none");
     };
     syncBasemapRef.current = syncBasemap;
     const canvas = document.createElement("canvas");
@@ -146,9 +125,31 @@ export function RasterMap(props: Props) {
     map.on("load", () => {
       if (disposed) return;
       const latest = propsRef.current;
-      addSatellite();
       map.addSource("full-raster", { type: "canvas", canvas, animate: false, coordinates: imageCoords(latest.meta) });
       map.addLayer({ id: "full-raster", type: "raster", source: "full-raster", paint: { "raster-resampling": "nearest", "raster-fade-duration": 0, "raster-opacity": latest.rasterOpacity } });
+      {
+        const aerialBase = `${import.meta.env.BASE_URL}site-data/aerial`;
+        const metadataUrl = STATIC_DEMO ? `${aerialBase}/metadata.json` : `${RASTER_API}/raster/aerial`;
+        fetch(metadataUrl, { signal: controller.signal }).then(response => {
+          if (!response.ok) throw new Error("无法读取航空底图配置");
+          return response.json() as Promise<{ available: boolean; version?: string; maxzoom?: number; bounds?: [number, number, number, number]; minzoom?: number }>;
+        }).then(info => {
+          if (disposed || !map.getLayer("full-raster")) return;
+          if (!info.available || !info.bounds) { setAerialError("航空底图未准备或配置缺失"); return; }
+          aerialBoundsRef.current = info.bounds;
+          const [west, south, east, north] = info.bounds;
+          map.setMaxBounds([[west, south], [east, north]]);
+          constrainAerialZoom();
+          map.addSource("aerial", { type: "raster", tileSize: 256, maxzoom: info.maxzoom ?? 20,
+            bounds: info.bounds, minzoom: STATIC_DEMO ? (info.minzoom ?? 12) : 0,
+            tiles: [STATIC_DEMO ? `${aerialBase}/{z}/{x}/{y}.jpg` : `${RASTER_API}/raster/aerial/tiles/{z}/{x}/{y}.png?v=${encodeURIComponent(info.version ?? "")}`],
+            attribution: "2025 航空影像" });
+          map.addLayer({ id: "aerial", type: "raster", source: "aerial",
+            layout: { visibility: propsRef.current.basemap ? "visible" : "none" },
+            paint: { "raster-fade-duration": 0 } }, "full-raster");
+          setAerialError(null);
+        }).catch(error => { if (!disposed && error.name !== "AbortError") setAerialError("航空底图加载失败，请检查网络或本地服务"); });
+      }
       map.addSource("selected", { type: "geojson", data: markerData(latest) });
       map.addLayer({ id: "selection", type: "circle", source: "selected", paint: { "circle-radius": ["case", ["get", "selected"], 7, 4], "circle-color": ["case", ["get", "selected"], "#ffffff", "#ffdb68"], "circle-stroke-width": 2, "circle-stroke-color": "#142739" } });
       map.addSource("focused", { type: "geojson", data: focusData(latest) });
@@ -160,12 +161,8 @@ export function RasterMap(props: Props) {
       syncBasemap();
       void syncPreview();
     });
-    map.on("sourcedataloading", event => { if (event.sourceId === "satellite") updateSatellite({ type: "loading" }); });
-    map.on("sourcedata", event => {
-      if (event.sourceId === "satellite") updateSatellite({ type: "data", tileLoaded: event.tile?.state === "loaded", complete: event.isSourceLoaded });
-    });
     map.on("error", event => {
-      if ((event as typeof event & { sourceId?: string }).sourceId === "satellite") updateSatellite({ type: "error" });
+      if ((event as typeof event & { sourceId?: string }).sourceId === "aerial") setAerialError("航空底图加载失败，请检查网络或本地服务");
       else console.error(event.error);
     });
     map.on("render", () => {
@@ -179,8 +176,19 @@ export function RasterMap(props: Props) {
     map.on("move", refreshCanvas);
     map.on("resize", refreshCanvas);
     map.on("click", event => propsRef.current.onLocate(...gcjToWgs(event.lngLat.lng, event.lngLat.lat)));
-    const observer = new ResizeObserver(() => map.resize()); observer.observe(host.current);
-    return () => { disposed = true; revision++; controller.abort(); syncPreviewRef.current = null; syncBasemapRef.current = null; observer.disconnect(); map.remove(); if (mapRef.current === map) mapRef.current = null; };
+    const constrainAerialZoom = () => {
+      const bounds = aerialBoundsRef.current;
+      if (!bounds || !host.current) return;
+      const [west, south, east, north] = bounds;
+      const nw = maplibregl.MercatorCoordinate.fromLngLat([west, north]);
+      const se = maplibregl.MercatorCoordinate.fromLngLat([east, south]);
+      const width = host.current.clientWidth, height = host.current.clientHeight;
+      if (!width || !height || se.x <= nw.x || se.y <= nw.y) return;
+      const minZoom = Math.log2(Math.max(width / (512 * (se.x - nw.x)), height / (512 * (se.y - nw.y))));
+      map.setMinZoom(Math.max(0, Math.min(23, minZoom + 0.001)));
+    };
+    const observer = new ResizeObserver(() => { map.resize(); constrainAerialZoom(); }); observer.observe(host.current);
+    return () => { disposed = true; revision++; controller.abort(); syncPreviewRef.current = null; syncBasemapRef.current = null; aerialBoundsRef.current = null; observer.disconnect(); map.remove(); if (mapRef.current === map) mapRef.current = null; };
   }, [props.meta, props.datasetId]);
   useEffect(() => { syncPreviewRef.current?.(); }, [props.mode, props.visible, props.mask, props.datasetId]);
   useEffect(() => {
@@ -198,6 +206,5 @@ export function RasterMap(props: Props) {
   }, [props.focused]);
   useEffect(() => { syncBasemapRef.current?.(); }, [props.basemap]);
   useEffect(() => { const map = mapRef.current; if (map?.getLayer("full-raster")) map.setPaintProperty("full-raster", "raster-opacity", props.rasterOpacity); }, [props.rasterOpacity]);
-  const satelliteNote = !props.basemap ? null : satelliteStatus.phase === "error" ? "卫星底图加载失败，请检查网络后重新开启" : satelliteStatus.phase === "loading" ? "卫星底图加载中…" : null;
-  return <div className="raster-map" ref={host}><button className="raster-float-button" onClick={reset}>完整范围</button><div className="raster-map-note" role={previewError || satelliteNote ? "status" : undefined} aria-live="polite">{previewError && <div role="alert">{previewError}</div>}{satelliteNote && <div role={satelliteStatus.phase === "error" ? "alert" : undefined}>{satelliteNote}</div>}<div>{props.meta.resolution[0]} m 原始像元 · 类别筛选与三维同步</div></div></div>;
+  return <div className="raster-map" ref={host}><button className="raster-float-button" onClick={reset}>完整范围</button><div className="raster-map-note" role={previewError || aerialError ? "status" : undefined} aria-live="polite">{previewError && <div role="alert">{previewError}</div>}{props.basemap && aerialError && <div role="alert">{aerialError}</div>}<div>{props.meta.resolution[0]} m 原始像元 · 类别筛选与三维同步</div></div></div>;
 }

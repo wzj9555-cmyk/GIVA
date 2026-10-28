@@ -22,6 +22,9 @@ def check_port(port: int) -> None:
     if not 1 <= port <= 65535:
         raise RuntimeError("端口必须在 1 到 65535 之间。")
     with socket.socket() as sock:
+        # A just-stopped service can leave connections in TIME_WAIT. They do
+        # not prevent Uvicorn from restarting with SO_REUSEADDR enabled.
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         try:
             sock.bind(("127.0.0.1", port))
         except OSError:
@@ -86,6 +89,7 @@ def build_frontend() -> None:
 def main() -> None:
     sys.path.insert(0, str(ROOT / "backend"))
     from raster_common import DEFAULT_CACHE_DIR, DEFAULT_INPUT_DIR, cache_directory, discover_sources, read_cache_metadata
+    from aerial import prepare_aerial
 
     parser = argparse.ArgumentParser(description="GIVA macOS 全量 TIF 工作台")
     parser.add_argument("--source", type=Path, help="只准备输入目录中的指定 TIF")
@@ -104,6 +108,7 @@ def main() -> None:
             fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
         except BlockingIOError:
             raise RuntimeError("此缓存目录已被另一个 GIVA 进程使用，请先关闭已有服务。") from None
+        prepare_aerial(cache_root / ".aerial-Air2025")
         sources = discover_sources(input_dir)
         if args.source:
             wanted = args.source.resolve()

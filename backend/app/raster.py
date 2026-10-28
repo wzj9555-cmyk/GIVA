@@ -2,12 +2,19 @@
 from __future__ import annotations
 
 import os
+import io
+import json
 import threading
 from pathlib import Path
 
 import numpy as np
 from fastapi import APIRouter, HTTPException, Query
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, Response
+from PIL import Image
+import rasterio
+from rasterio.enums import Resampling
+from rasterio.transform import from_bounds
+from rasterio.vrt import WarpedVRT
 from rasterio.transform import Affine
 from rasterio.warp import transform
 from threadpoolctl import threadpool_limits
@@ -125,6 +132,48 @@ def datasets():
 @router.get("/metadata")
 def metadata(dataset_id: str | None = Query(None)):
     return get_raster(dataset_id).meta
+
+
+def aerial_cache():
+    directory = RESULT_DIR / ".aerial-Air2025"
+    image, manifest = directory / "aerial.tif", directory / "aerial-cache.json"
+    try:
+        data = json.loads(manifest.read_text(encoding="utf-8"))
+        if data["version"] != 1 or data["bytes"] != image.stat().st_size:
+            return None
+        return image, data["reference"]
+    except (OSError, KeyError, ValueError, TypeError):
+        return None
+
+
+@router.get("/aerial")
+def aerial_status():
+    cached = aerial_cache()
+    if cached is None:
+        return {"available": False}
+    path, meta = cached
+    return {"available": True, "bounds": meta["bounds"], "coordinates": meta["coordinates"],
+            "version": str(path.stat().st_mtime_ns), "maxzoom": 20}
+
+
+@router.get("/aerial/tiles/{zoom}/{x}/{y}.png")
+def aerial_tile(zoom: int, x: int, y: int):
+    if zoom < 0 or zoom > 22 or x < 0 or y < 0 or x >= 2**zoom or y >= 2**zoom:
+        raise HTTPException(404, "瓦片坐标无效")
+    cached = aerial_cache()
+    if cached is None:
+        raise HTTPException(404, "航空底图未准备")
+    half = 20037508.342789244
+    size = 2 * half / 2**zoom
+    left, top = -half + x * size, half - y * size
+    affine = from_bounds(left, top - size, left + size, top, 256, 256)
+    with rasterio.open(cached[0]) as source:
+        with WarpedVRT(source, crs="EPSG:3857", transform=affine, width=256, height=256,
+                       resampling=Resampling.bilinear, add_alpha=True) as warped:
+            pixels = warped.read([1, 2, 3, 4]).transpose(1, 2, 0)
+    output = io.BytesIO()
+    Image.fromarray(pixels, mode="RGBA").save(output, format="PNG")
+    return Response(output.getvalue(), media_type="image/png", headers={"Cache-Control": "public, max-age=86400"})
 
 
 @router.get("/files/{name}")
