@@ -1,0 +1,338 @@
+{
+  "version": 4,
+  "dataset_id": "joint_2p5m_512d",
+  "source_signature": {
+    "path": "tif/joint_2p5m_512d.tif",
+    "sha256": "87cd9028a5b684a9735d3bf5f907510708b8235298fa6d6827956010f0e84fc3",
+    "size": 645696688,
+    "mtime_ns": 1792433680000000000
+  },
+  "name": "joint_2p5m_512d.tif",
+  "parameters": {
+    "processing_version": "full-raster-macos-4-original-clustering",
+    "clusters": 8,
+    "pca_components": 3,
+    "clustering_epochs": 3,
+    "batch_size": 8192,
+    "clustering_space": "original",
+    "clustering_metric": "euclidean",
+    "clustering_normalization": "none",
+    "clustering_whiten": false,
+    "random_state": 42,
+    "n_init": 3,
+    "preview_oversampling": 2,
+    "color_percentiles": [
+      2,
+      98
+    ],
+    "vector_dtype": "float32"
+  },
+  "width": 832,
+  "height": 700,
+  "bands": 512,
+  "valid_count": 344856,
+  "total_pixels": 582400,
+  "nodata": -9999.0,
+  "resolution": [
+    2.5,
+    2.5
+  ],
+  "crs": "EPSG:32651",
+  "transform": [
+    2.5,
+    0.0,
+    366350.0,
+    0.0,
+    -2.5,
+    3451710.0,
+    0.0,
+    0.0,
+    1.0
+  ],
+  "bounds": [
+    121.59727540989697,
+    31.176062618506624,
+    121.61932790646918,
+    31.192072938352656
+  ],
+  "image_coordinates": [
+    [
+      121.59727540989697,
+      31.192072938352656
+    ],
+    [
+      121.61932790646918,
+      31.192072938352656
+    ],
+    [
+      121.61932790646918,
+      31.176062618506624
+    ],
+    [
+      121.59727540989697,
+      31.176062618506624
+    ]
+  ],
+  "preview_size": [
+    1678,
+    1424
+  ],
+  "source_bounds": [
+    366350.0,
+    3449960.0,
+    368430.0,
+    3451710.0
+  ],
+  "cluster_count": 8,
+  "palette": [
+    "#52c9b0",
+    "#f2b86b",
+    "#7795ed",
+    "#e784a6",
+    "#a5cc73",
+    "#b59ae5",
+    "#65bedc",
+    "#e88d67"
+  ],
+  "cluster_counts": [
+    23680,
+    33290,
+    18475,
+    99078,
+    43583,
+    24099,
+    58711,
+    43940
+  ],
+  "pca_explained_ratio": [
+    0.065770573929812,
+    0.04622306196140136,
+    0.035575959160908464
+  ],
+  "pca_fit_count": 344856,
+  "clustering_fit_count": 344856,
+  "clustering_epochs": 3,
+  "clustering_components": 512,
+  "clustering_space": "original",
+  "clustering_metric": "euclidean",
+  "clustering_normalization": "none",
+  "clustering_whiten": false,
+  "sampled": false,
+  "position_bounds": [
+    [
+      -16.267608642578125,
+      -16.82171058654785,
+      -17.613452911376953
+    ],
+    [
+      16.222332000732422,
+      16.144981384277344,
+      16.722148895263672
+    ]
+  ],
+  "elapsed_seconds": 8.62,
+  "description": "512D raster embedding; unsupervised clusters, not semantic land-use labels",
+  "products": {
+    "vectors.npy": {
+      "bytes": 1192755328
+    },
+    "norms.npy": {
+      "bytes": 1379552
+    },
+    "lookup.npy": {
+      "bytes": 2329728
+    },
+    "positions.f32": {
+      "bytes": 4138272
+    },
+    "colors.u8": {
+      "bytes": 1034568
+    },
+    "labels.u8": {
+      "bytes": 344856
+    },
+    "pixel_ids.u32": {
+      "bytes": 1379424
+    },
+    "clusters.tif": {
+      "bytes": 88306
+    },
+    "pca_rgb.tif": {
+      "bytes": 1025582
+    },
+    "pca.png": {
+      "bytes": 1384729
+    },
+    "clusters.png": {
+      "bytes": 311477
+    },
+    "全量栅格可视化总览.png": {
+      "bytes": 1259842
+    },
+    "PCA累计解释方差曲线.png": {
+      "bytes": 155042
+    },
+    "PCA累计解释方差曲线.csv": {
+      "bytes": 33492
+    },
+    "PCA累计解释方差曲线.json": {
+      "bytes": 43338
+    }
+  },
+  "web_vector_chunks": [
+    {
+      "name": "vectors-0000.f32",
+      "start": 0,
+      "rows": 16384,
+      "bytes": 33554432,
+      "sha256": "d21b30700347010a12e94855a70539bb0f9d378c3135f9030a994af931876cba"
+    },
+    {
+      "name": "vectors-0001.f32",
+      "start": 16384,
+      "rows": 16384,
+      "bytes": 33554432,
+      "sha256": "eec108bf293efd65cd75331313db62ffe5236c91033f574a40d5e10376265ecc"
+    },
+    {
+      "name": "vectors-0002.f32",
+      "start": 32768,
+      "rows": 16384,
+      "bytes": 33554432,
+      "sha256": "b0e7387ce2a735041043e3ae72d55d5b537e3743b1d59ed690f5c72774e529f8"
+    },
+    {
+      "name": "vectors-0003.f32",
+      "start": 49152,
+      "rows": 16384,
+      "bytes": 33554432,
+      "sha256": "e0d7a73841cd8443fe6b8375985d9f8cd6b259f67e00c07b61bace2290970206"
+    },
+    {
+      "name": "vectors-0004.f32",
+      "start": 65536,
+      "rows": 16384,
+      "bytes": 33554432,
+      "sha256": "8167c5ec2ba57365c380b4ebff2c5d432517744c427e3ccd2ce6cb51fc78370d"
+    },
+    {
+      "name": "vectors-0005.f32",
+      "start": 81920,
+      "rows": 16384,
+      "bytes": 33554432,
+      "sha256": "e9c8574a1fa34b5f03965db2bf19327d1fec2837f22d2bbbf344c521260213a2"
+    },
+    {
+      "name": "vectors-0006.f32",
+      "start": 98304,
+      "rows": 16384,
+      "bytes": 33554432,
+      "sha256": "189b28ee5323dff2129de0be8122d81e534fa669ef9b64d6e0578bc436199d84"
+    },
+    {
+      "name": "vectors-0007.f32",
+      "start": 114688,
+      "rows": 16384,
+      "bytes": 33554432,
+      "sha256": "840049c9e99d4da7b406400ab0e9313e5ad7883d3255ae831249c631850bf002"
+    },
+    {
+      "name": "vectors-0008.f32",
+      "start": 131072,
+      "rows": 16384,
+      "bytes": 33554432,
+      "sha256": "79f557c8e360b288ef553d96626a5d9d2efd6c456b4ed5e449f42c59d3b87be3"
+    },
+    {
+      "name": "vectors-0009.f32",
+      "start": 147456,
+      "rows": 16384,
+      "bytes": 33554432,
+      "sha256": "df8ddf6d5f12a566e405a5c45b60442f218bcff2185fc50ec0f96e9818642bdd"
+    },
+    {
+      "name": "vectors-0010.f32",
+      "start": 163840,
+      "rows": 16384,
+      "bytes": 33554432,
+      "sha256": "296204c4ca636b9fbd931dda0b765a23d7df8a6c90559fcbf1ae714f264cfce1"
+    },
+    {
+      "name": "vectors-0011.f32",
+      "start": 180224,
+      "rows": 16384,
+      "bytes": 33554432,
+      "sha256": "42a756834ab9e5ab150bde45e1c725aaf6aa1e2b89524c6e4587cc060dde3f69"
+    },
+    {
+      "name": "vectors-0012.f32",
+      "start": 196608,
+      "rows": 16384,
+      "bytes": 33554432,
+      "sha256": "6e8ccb7d742f65ee553d105f6e68ac4d076a32f1a46ab0ef8e987091f1738aa9"
+    },
+    {
+      "name": "vectors-0013.f32",
+      "start": 212992,
+      "rows": 16384,
+      "bytes": 33554432,
+      "sha256": "61aa2690061d9fccf0aac7180092c7e86caf4a5f2d4beeefd96658df45fe2f59"
+    },
+    {
+      "name": "vectors-0014.f32",
+      "start": 229376,
+      "rows": 16384,
+      "bytes": 33554432,
+      "sha256": "3c5b4cc00db651d11ca0e13cdbddb017c9785193ba7f2fa87a58c638f948c875"
+    },
+    {
+      "name": "vectors-0015.f32",
+      "start": 245760,
+      "rows": 16384,
+      "bytes": 33554432,
+      "sha256": "7bf10ea9f0a7635d5add5256b25abce06821dfafc873659ac63e5d3a58b169b3"
+    },
+    {
+      "name": "vectors-0016.f32",
+      "start": 262144,
+      "rows": 16384,
+      "bytes": 33554432,
+      "sha256": "bbd483a03792e641f96e03df5c46bf5ef17d578955594cc0ed1f88baac97d1c5"
+    },
+    {
+      "name": "vectors-0017.f32",
+      "start": 278528,
+      "rows": 16384,
+      "bytes": 33554432,
+      "sha256": "aa25fc29382d80b88e7f6cd75d904b4a1aafc7059c15389d86644cc9463e5eca"
+    },
+    {
+      "name": "vectors-0018.f32",
+      "start": 294912,
+      "rows": 16384,
+      "bytes": 33554432,
+      "sha256": "fcc092ac27e3c06f9ed85896e754c9dd58921a96d5d3bf200fb8c1bc01ca0640"
+    },
+    {
+      "name": "vectors-0019.f32",
+      "start": 311296,
+      "rows": 16384,
+      "bytes": 33554432,
+      "sha256": "06270e270879e150949073a65be236c1687d2be5cf05b14f6e54ccda45a9b83d"
+    },
+    {
+      "name": "vectors-0020.f32",
+      "start": 327680,
+      "rows": 16384,
+      "bytes": 33554432,
+      "sha256": "d75661c4396a288e1ee621adca317fa90c562399adfda8f92f23ce7553fb4f72"
+    },
+    {
+      "name": "vectors-0021.f32",
+      "start": 344064,
+      "rows": 792,
+      "bytes": 1622016,
+      "sha256": "2481167d623702d749b26271450b7e0fe703b032ff6f63a9bdd6f042cf3a5dc3"
+    }
+  ]
+}

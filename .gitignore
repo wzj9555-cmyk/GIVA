@@ -1,0 +1,17 @@
+.DS_Store
+*.swp
+*.swo
+.vscode/
+.idea/
+*.log
+.env
+.env.*
+node_modules/
+frontend/dist/
+frontend/.vite/
+deploy-dist/
+__pycache__/
+*.pyc
+.pytest_cache/
+.coverage
+htmlcov/

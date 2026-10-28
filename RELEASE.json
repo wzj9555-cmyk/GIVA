@@ -1,0 +1,222 @@
+{
+  "product": "GIVA macOS full-resolution TIF workspace",
+  "version": "0.3.0",
+  "release_date": "2026-10-28",
+  "timezone": "Asia/Shanghai",
+  "based_on": {
+    "source": "https://github.com/ZPGuiGroupWhu/GIVA-GeoEmbedding-Interactive-Visual-Analytics",
+    "base_commit": "480c4f29926bd296b97819cb78f2c35929173222"
+  },
+  "platform": "macOS arm64",
+  "conda_environment": "macos",
+  "runtime_versions": {
+    "fastapi": "0.151.0",
+    "matplotlib-base": "3.10.9",
+    "nodejs": "22.21.1",
+    "numpy": "2.5.4",
+    "pillow": "11.3.0",
+    "python": "3.12.8",
+    "rasterio": "1.4.3",
+    "scikit-learn": "1.9.1",
+    "threadpoolctl": "3.7.0",
+    "uvicorn": "0.54.0"
+  },
+  "layout": {
+    "originals": "../tif",
+    "generated_cache": "../cache/<dataset_id>"
+  },
+  "cache_version": 4,
+  "validation": {
+    "original_sha256_after_migration": "passed for both originals",
+    "fresh_full_rebuild": "passed: both original 512D datasets rebuilt with cache v4, no PCA clustering or whitening",
+    "force_rebuild": "passed for both datasets after complete caches already existed",
+    "cache_and_verifier_regression_tests": {
+      "passed": 18,
+      "failed": 0
+    },
+    "full_data_and_live_api_tests": {
+      "passed": 49,
+      "failed": 0,
+      "datasets": 7,
+      "top_k": [
+        30,
+        200,
+        500
+      ],
+      "note": "Initial checks overlapped service restart; concat and dino were rerun after readiness and passed."
+    },
+    "frontend_typecheck": "passed",
+    "frontend_production_build": "passed",
+    "browser": "passed: both datasets; linked cluster/PCA masks, all-off/restore, hidden-class clicks blocked, hiding selected class invalidates in-flight similarity, rapid mode changes, offscreen changes persist when returning; no console errors",
+    "mac_launcher": "passed: minimal PATH, inactive Conda, arbitrary cwd, package copied to Chinese+space path, cache and UI build reuse",
+    "shutdown": "passed: SIGINT exit 0 and port released; original 8000 Ctrl+C shutdown also checked",
+    "concurrent_cache_lock": "passed: second launcher rejects cache in use",
+    "chinese_figures": "overview and explained variance visually inspected; title spacing corrected",
+    "warnings": "Rasterio internals emit NumPy deprecation notices during checks; no failed checks",
+    "frontend_mask_regression_tests": {
+      "passed": 7,
+      "failed": 0
+    },
+    "raw_clustering_input": "passed: 48D fixture captures every partial_fit and predict value, Float32 raw vectors unchanged",
+    "frontend_satellite_status_regression_tests": {
+      "passed": 5,
+      "failed": 0
+    },
+    "satellite_browser": "passed: Google imagery visible; simulated tile HTTP 503 shows error; disable/re-enable after recovery renders imagery with recreated source",
+    "opacity_slider_browser": "passed: 0% hides TIF only; 100% opaque; 50% retained when toggling basemap and PCA mode; dataset switch preserves value",
+    "similar_candidate_browser": "passed: Top 200 and 500; 50 buttons in one horizontal row; keyboard scrolling and candidate 50 reachable; original query [302,415] and all results retained when focusing candidates 1,36,50; orange markers visible in both views; new search clears focus and resets scroll; no console errors",
+    "validated_dataset_ids": [
+      "concat_2p5m_512d",
+      "dino_2p5m_384d",
+      "joint_2p5m_512d",
+      "joint_2p5m_512d_sacle",
+      "tessera_bilinear_2p5m_128d",
+      "tessera_native_10m_128d",
+      "tessera_nearest_2p5m_128d"
+    ],
+    "github_pages_static": "local browser: joint full 344856 pixels, EPSG:32651 location, Top 500 and repeat search; all 500 indices match Python reference, max absolute score error 8.6e-8; public vector chunks SHA-256 verified"
+  },
+  "datasets": [
+    {
+      "dataset_id": "concat_2p5m_512d",
+      "valid_count": 344856,
+      "bands": 512,
+      "sampled": false,
+      "clustering_space": "original",
+      "clustering_components": 512,
+      "clustering_metric": "euclidean",
+      "clustering_normalization": "none",
+      "clustering_whiten": false,
+      "cluster_counts": [
+        19054,
+        33184,
+        66735,
+        80258,
+        56633,
+        35724,
+        34508,
+        18760
+      ],
+      "pca_explained_ratio": [
+        0.11478283573893068,
+        0.06788053459332322,
+        0.056230398605676454
+      ],
+      "elapsed_seconds": 8.56
+    },
+    {
+      "dataset_id": "joint_2p5m_512d",
+      "valid_count": 344856,
+      "bands": 512,
+      "sampled": false,
+      "clustering_space": "original",
+      "clustering_components": 512,
+      "clustering_metric": "euclidean",
+      "clustering_normalization": "none",
+      "clustering_whiten": false,
+      "cluster_counts": [
+        23680,
+        33290,
+        18475,
+        99078,
+        43583,
+        24099,
+        58711,
+        43940
+      ],
+      "pca_explained_ratio": [
+        0.065770573929812,
+        0.04622306196140136,
+        0.035575959160908464
+      ],
+      "elapsed_seconds": 8.45
+    }
+  ],
+  "originals": [
+    {
+      "name": "joint_2p5m_512d.tif",
+      "size": 645696688,
+      "sha256": "87cd9028a5b684a9735d3bf5f907510708b8235298fa6d6827956010f0e84fc3",
+      "migration_verified": true
+    },
+    {
+      "name": "concat_2p5m_512d.tif",
+      "size": 496602134,
+      "sha256": "d1b58f3a76163ef03521e5cbf5661529422a45e25d042a4dd559f5a0cf6cb2a3",
+      "migration_verified": true
+    }
+  ],
+  "sha256": {
+    ".codex": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    ".gitattributes": "266d92931b0c82430d34eb032023d0ef910aeac62d5519bd1ac2de57e61d5ab4",
+    ".github/workflows/pages.yml": "55fe1f9fc6e8cc25029622653c1f1bc648c05d0e05a9b06110d02ded4ce61efd",
+    ".gitignore": "18f8c43b06371056425041463483b10a3d9f4d9e2de2087821cdb71ee8626aaa",
+    "DEPLOYMENT.md": "70cb2b275360d5207497050cb70872ebf753340efd8944181de81a799f985843",
+    "FULL_RASTER.md": "813d9843636b22a375c83789a7efbeb7c9294c4454bd116fb7897f5566050b25",
+    "GITHUB_PAGES.md": "755c5688036e0f67e63012cf4a201afcd929c119d5d10a2f60470871d485815c",
+    "MACOS.md": "a3d001107fd9f5fbf6b084e9b2c3552b9aa21af6e1987ec178a61db8cf91c063",
+    "README.md": "b3114996b8d154f5cce0977463e780695b16b88edaeb91d4c775bf93f4da1d4e",
+    "SOURCE_DATA.json": "6ff0105b118d4ca9d27a4fc9ad6caaee091e68ce95e0ca242291a46137e9d09c",
+    "backend/app/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "backend/app/raster.py": "5080042d126e1dddddbdd1851176d3061d629508377485cf5fe1ba3dac3a753f",
+    "backend/app/raster_main.py": "d0f019d8702f2bc0b6d6a5fa05153ad8f87627b498ed9ac6a7879afab19625ae",
+    "backend/plot_explained_variance.py": "8440a94c09f0234505d7507e8e67e92b18d58dc0c8d2a5d4fb4d0a7897fed327",
+    "backend/prepare_raster.py": "1ae30e1ee583f8100eecc0e1e642a0201722f88153f29fc07854c71b28e06fb2",
+    "backend/pyproject.toml": "5cdd6f47520e9279cd8ca42202133cd95e389e57b5207b98cb60d49461b8ee3a",
+    "backend/raster-requirements.txt": "b88760cff95fdbddf9f7d2d375da4e678f5c6762e07506783a5b325a3cc2ee24",
+    "backend/raster_common.py": "fa9e395c901bf08c614c9c5fd6b1dea60e98ae9e7d9347e2cd2830ed8c1ce247",
+    "backend/tests/test_raster_cache.py": "3245a8c1db656768edd6634cdba22ee87a9d820c4f9af2bd1a94841d78279350",
+    "backend/tests/test_raster_similarity.py": "4cdab14625ccf0e36260f8383e4957cfc24346ee8361a5aa7cb7b1c40900a090",
+    "backend/tests/test_verification.py": "143ad41588b01cfb9d2b03d1be110497cfb3ee9465b7ba2a7e1887089701b6d1",
+    "backend/verify_raster.py": "886f71faf6a72f43d9c5ec55f09bdf42e47d3d2831614805e88c30058c2a9e7a",
+    "environment-osx-arm64.lock": "0173863072b450397b0b4e0965c9a46c5bc0ee0389b8ff01906bb799fd9908b6",
+    "environment.yml": "9750d1b9072a36aab02eaac589b296790bc6e3ec0271698881ce787108f64371",
+    "frontend/README.md": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "frontend/index.html": "41b0bf690c71b922b90d907284b864967e9a295087126f99c4887078335e8add",
+    "frontend/package.json": "9cc05244bbda991025ccc95f2891446a31cf4bfc5da18c5193d4f57dacb1be66",
+    "frontend/pnpm-lock.yaml": "9b870add8208ad15a124a2176a8f66381e616c8249a6a93c4f1be1804d034de6",
+    "frontend/pnpm-workspace.yaml": "683b2ab4e361bdd5f736ad10393f3bdbd414ee44f57702d219f561879d1959fa",
+    "frontend/src/App.tsx": "0577adefc3ac1f6409ec42a9f173933792c9170df900daea2f29bb8ece7e2299",
+    "frontend/src/main.tsx": "9da49df57ba1eb712d61c77078c3e4ebcbb7bb53e00745e17c090288bfff300a",
+    "frontend/src/raster/RasterCloud.tsx": "dc802e7c06aee19551227bd715aa791cb9e9d17d93ee069de74bde5b0f158251",
+    "frontend/src/raster/RasterMap.tsx": "bf9ff3748c9c3196ad1c779bdfdeabebb3fd1231929f10abd14b8b6996fb9fd0",
+    "frontend/src/raster/RasterWorkspace.tsx": "d549dcb419cd288288af18f99d43f775130e10247ccded2fc02bf0dc9a19c333",
+    "frontend/src/raster/previewMask.ts": "13e7d58243507b83003e98ee1af5a5fcae008f373bf37c99e2bde1f151517f90",
+    "frontend/src/raster/raster.css": "f30b5defdcb040dd1eb3b9bc2aecd6c7ff517a5faf245f27d798ca8967143cc2",
+    "frontend/src/raster/satelliteStatus.ts": "0f10f37a250835129ee9455186657ab9d8629f6faed52dea8a8c32d4d4e40ef5",
+    "frontend/src/raster/similarity.worker.ts": "25b5eef92298da40f6424895a569d84cdeba8c635fa8cffc0984ae57fea128be",
+    "frontend/src/raster/staticRaster.ts": "131b7d4dbbc2d9fab64aacd40539ca4eca3d87def5e7c4bb4214d3df53a299b3",
+    "frontend/src/raster/types.ts": "f75303d94e99d6f7bb3ad69f37a722f58881905ecf1a31721a0d3eea28b3f2a7",
+    "frontend/src/styles.css": "21737aa64680a7948e043cb902b6b2d51a262cd87e8e4ec8b818f890165f52ab",
+    "frontend/src/vite-env.d.ts": "f6c3bce301f2a01d606bd7423980c6af06ad3b1bd51fe1878ba44baf60f87bcf",
+    "frontend/tests/previewMask.test.mjs": "8436fba8e2e1c93cf51ce387b2fb0a316e0878960ca189cdc0b66d8b82961d3d",
+    "frontend/tests/satelliteStatus.test.mjs": "66bb4860194ddb58b9a40b4be108d107b52381b92fbd0bf26cd03852f5ed4efb",
+    "frontend/tsconfig.json": "5f94d14277c40881c1310e109569497bf5ddb20e9cd4ea869594043257ec23a3",
+    "frontend/tsconfig.node.json": "9e2abb169ea87b7190613a1d4da57ca608463a453bd4231fa3aeee5e308370dd",
+    "frontend/vite.config.ts": "766a0e72c9e5b90dffb343fd093166a41f7fa6073b59c596774d3e43c260d78f",
+    "scripts/export_web_data.py": "738a4f218abcd4bad3d9ab5cd5bc3b9ada04f49d13e9a7d24c0fcd73731d69cc",
+    "site-data/joint_2p5m_512d/metadata.json": "0e2f0ae3786f9d1bb3b38c08f475b9a810b11a9116d3d89f9bcfb26974ae177d",
+    "start-raster.command": "6d2ef08905776237cbbddf4c39c25352b5e04949cc28e63157f5ee5172fa69f4",
+    "start.command": "d626afcb7c354b51f10e305fc5e2588d7c287d40def527fdb437f339f0f902a2",
+    "start.py": "d83ec211795f234d0b23653a306b72fba068d888f680687450616d8021c41690",
+    "start_raster.py": "1df0e8bc528b20b03df9979b640da1dd51a6b604457e831c70a5fb78edc7ece4"
+  },
+  "frontend_build_sha256": {
+    "frontend/dist/.build-signature": "9657afbcd0f4f220dada91d221eca285a9a95109e8349d545afa5c9999b655dd",
+    "frontend/dist/assets/index-CWrF8kup.js": "f84356b9b9dff1c607ee33c030281acea755acd1c47ca1dfcc512553a4a2813a",
+    "frontend/dist/assets/index-DbyoWuzL.css": "0ca190472db3e4fc4982fc60a7d2d0f63f8755a5ec0de596eb01c6d5237bf0f9",
+    "frontend/dist/assets/similarity.worker-BDnacbvS.js": "321d279ea324464b53019e888849a1088a2f426e2f557ec12b8185e46355664d",
+    "frontend/dist/index.html": "00f1c9230198cb08674a26a4ef1fe06e371ea25d2b55368381cd91d595c21857"
+  },
+  "changes": [
+    "双视图类别筛选：聚类/PCA配色同步透明掩膜、选中与相似高亮过滤",
+    "CanvasSource同步纹理更新，避免快速切换与离屏更新的旧图覆盖",
+    "原始全部维度直接MiniBatchKMeans，PCA仅显示，缓存v4强制重建",
+    "卫星底图改用用户提供的 Google XYZ 地址，保留署名与加载/失败提示，失败后重新开启会重建影像源重试",
+    "新增右侧TIF不透明度滑条0–100%，底图/配色/数据集切换保留用户设置",
+    "相似候选独立橙色定位与双视图平移，保留原查询点和结果，重复点击可再次定位",
+    "候选结果单行横向滚动展示前50个可见结果，显示原始排名和分数",
+    "新增Top200、500选项与API上限500，保持原始向量全量精确余弦检索",
+    "GitHub Pages 静态公开版：joint 全量像元、浏览器精确余弦检索、分块和缓存"
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "originals": [
+    {
+      "name": "joint_2p5m_512d.tif",
+      "size": 645696688,
+      "sha256": "87cd9028a5b684a9735d3bf5f907510708b8235298fa6d6827956010f0e84fc3",
+      "migration_verified": true
+    },
+    {
+      "name": "concat_2p5m_512d.tif",
+      "size": 496602134,
+      "sha256": "d1b58f3a76163ef03521e5cbf5661529422a45e25d042a4dd559f5a0cf6cb2a3",
+      "migration_verified": true
+    }
+  ]
+}

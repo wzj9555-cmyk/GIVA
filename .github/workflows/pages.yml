@@ -1,0 +1,41 @@
+name: Publish GitHub Pages
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: true
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install dependencies
+        working-directory: frontend
+        run: npx --yes pnpm@9.15.9 install --frozen-lockfile
+      - name: Check and build static workspace
+        working-directory: frontend
+        env:
+          VITE_STATIC_DEMO: '1'
+          VITE_BASE_PATH: /GIVA/
+        run: |
+          npx --yes pnpm@9.15.9 run typecheck
+          npx --yes pnpm@9.15.9 exec vite build --outDir ../deploy-dist
+          cp -R ../site-data ../deploy-dist/site-data
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: deploy-dist
+      - id: deployment
+        uses: actions/deploy-pages@v4
